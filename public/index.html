@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Global Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; background: #222; color: #fff; }
+        #chat { max-width: 600px; margin: 50px auto; background: #333; border-radius: 8px; padding: 20px; }
+        #messages { list-style-type: none; margin: 0; padding: 0; max-height: 400px; overflow-y: auto; }
+        #messages li { padding: 5px 10px; }
+        #messages li.system { color: #aaa; font-style: italic; }
+        #form { display: flex; margin-top: 10px; }
+        #input { flex: 1; padding: 10px; border: none; border-radius: 4px; }
+        #send { padding: 10px 15px; border: none; background: #00c17c; color: #fff; border-radius: 4px; margin-left: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div id="chat">
+    <h2>Global Chat</h2>
+    <ul id="messages"></ul>
+    <form id="form" autocomplete="off">
+        <input id="input" placeholder="Type a message..." autocomplete="off" /><button id="send">Send</button>
+    </form>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    let myUser = '';
+    socket.on('you', (username) => {
+        myUser = username;
+        addMessage({ user: 'System', msg: `You are ${username}` });
+    });
+
+    socket.on('chat message', (data) => {
+        addMessage(data);
+    });
+
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+            socket.emit('chat message', input.value);
+            input.value = '';
+        }
+    });
+
+    function addMessage({ user, msg }) {
+        const item = document.createElement('li');
+        item.textContent = `${user}: ${msg}`;
+        if(user === 'System') item.classList.add('system');
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+    }
+</script>
+</body>
+</html>
